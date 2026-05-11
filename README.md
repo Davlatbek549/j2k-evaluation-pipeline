@@ -8,6 +8,8 @@ Repository: [github.com/Davlatbek549/j2k-evaluation-pipeline](https://github.com
 
 Benchmark source: [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns). The GitHub Actions workflow clones a sparse subset of this repository directly in CI and copies selected Java files into `java-source/` before conversion.
 
+A fork of the benchmark repository also exists at [`Davlatbek549/java-design-patterns`](https://github.com/Davlatbek549/java-design-patterns).
+
 ## What the Pipeline Does
 
 The pipeline performs three main steps:
