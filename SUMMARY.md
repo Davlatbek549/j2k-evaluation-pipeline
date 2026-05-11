@@ -8,9 +8,9 @@ The evaluator is implemented in Kotlin and uses JavaParser for AST-based declara
 
 ## Source Project
 
-The pipeline uses a subset of [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns), a public Java repository containing many classic design-pattern implementations.
+The pipeline uses a subset of [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns), a public Java repository containing many classic design-pattern implementations. This repository is the benchmark source for the evaluation.
 
-The GitHub Actions workflow checks out selected directories from that project and copies Java files into `java-source/` before running `j2k`.
+The GitHub Actions workflow clones a sparse subset of [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns) directly in CI and copies selected Java files into `java-source/` before running `j2k`.
 
 ## Conversion Result
 

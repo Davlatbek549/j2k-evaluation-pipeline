@@ -6,11 +6,13 @@ This project was created for a JetBrains internship task. It automates a small c
 
 Repository: [github.com/Davlatbek549/j2k-evaluation-pipeline](https://github.com/Davlatbek549/j2k-evaluation-pipeline)
 
+Benchmark source: [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns). The GitHub Actions workflow clones a sparse subset of this repository directly in CI and copies selected Java files into `java-source/` before conversion.
+
 ## What the Pipeline Does
 
 The pipeline performs three main steps:
 
-1. Collects Java source files from a selected subset of [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns).
+1. Collects Java source files from a selected subset of [`iluwatar/java-design-patterns`](https://github.com/iluwatar/java-design-patterns), which is used as the benchmark source.
 2. Runs the `j2k` converter and writes converted Kotlin files into `kotlin-converted/`.
 3. Runs a Kotlin evaluator that scans converted files for Java-style conversion artifacts and writes `reports/summary.md`.
 
