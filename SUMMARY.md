@@ -4,7 +4,7 @@
 
 This project evaluates the quality of Java-to-Kotlin conversion using JetBrains `j2k`. The pipeline collects Java source files, converts them to Kotlin, scans the converted output for common Java-style leftovers, and generates a Markdown report at `reports/summary.md`.
 
-The evaluator is implemented in Kotlin and uses only the standard library. It is intentionally lightweight so the quality checks are easy to inspect, modify, and run in CI.
+The evaluator is implemented in Kotlin and uses JavaParser for AST-based declaration analysis. It is intentionally lightweight so the quality checks are easy to inspect, modify, and run in CI.
 
 ## Source Project
 
@@ -39,6 +39,12 @@ The Kotlin evaluator checks each converted `.kt` file for these quality signals:
 - Java-style `new` keyword usage
 
 The evaluator counts issues per file, totals all issues, computes the number of clean conversions, and reports an overall quality score based on the percentage of files with no detected issues.
+
+## AST Declaration Analysis
+
+The pipeline now includes AST-based declaration coverage analysis using JavaParser. For each Java file in `java-source/`, the analyzer extracts class names, method names, and field names from the Java AST, then compares them with the corresponding converted Kotlin file in `kotlin-converted/`.
+
+This analysis adds a structural signal beyond text-style checks: it estimates whether important declarations survived conversion. The generated report includes per-file declaration coverage, unmatched declarations, and an overall AST coverage percentage.
 
 ## Edge Case Analysis
 

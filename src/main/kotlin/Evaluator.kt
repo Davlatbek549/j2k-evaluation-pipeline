@@ -28,8 +28,9 @@ fun main() {
         .walkKtFiles()
         .map { evaluateFile(it, convertedDirectory) }
         .toList()
+    val astAnalyses = AstAnalyzer.analyzeProject()
 
-    val report = buildReport(evaluations)
+    val report = buildReport(evaluations, astAnalyses)
     reportFile.parentFile.mkdirs()
     reportFile.writeText(report)
 
@@ -140,7 +141,7 @@ private fun Int.toIssue(title: String, detail: String): QualityIssue? {
     )
 }
 
-private fun buildReport(evaluations: List<FileEvaluation>): String {
+private fun buildReport(evaluations: List<FileEvaluation>, astAnalyses: List<AstFileAnalysis>): String {
     val totalFiles = evaluations.size
     val totalIssues = evaluations.sumOf { it.issueCount }
     val cleanFiles = evaluations.count { it.isClean }
@@ -186,9 +187,53 @@ private fun buildReport(evaluations: List<FileEvaluation>): String {
             appendEvaluations(edgeCaseEvaluations)
         }
 
+        appendAstAnalysis(astAnalyses)
+
         appendLine("## Conclusion")
         appendLine()
         appendLine(buildConclusion(totalFiles, totalIssues, qualityScore))
+    }
+}
+
+private fun StringBuilder.appendAstAnalysis(astAnalyses: List<AstFileAnalysis>) {
+    val totalDeclarations = astAnalyses.sumOf { it.totalDeclarations }
+    val totalMatched = astAnalyses.sumOf { it.matchedCount }
+    val overallCoverage = if (totalDeclarations == 0) {
+        100.0
+    } else {
+        totalMatched.toDouble() / totalDeclarations.toDouble() * 100.0
+    }
+
+    appendLine("## AST Declaration Analysis")
+    appendLine()
+    appendLine("- Java/Kotlin file pairs analyzed: ${astAnalyses.size}")
+    appendLine("- Java declarations found: $totalDeclarations")
+    appendLine("- Declarations matched in Kotlin: $totalMatched")
+    appendLine("- Overall AST coverage: ${overallCoverage.formatPercentage()}%")
+    appendLine()
+
+    if (astAnalyses.isEmpty()) {
+        appendLine("No Java/Kotlin file pairs were available for AST declaration analysis.")
+        appendLine()
+        return
+    }
+
+    astAnalyses.forEach { analysis ->
+        appendLine("### ${analysis.javaFile.name}")
+        appendLine()
+        appendLine("- Kotlin file: `${analysis.kotlinFile.path}`")
+        appendLine("- Declaration coverage: ${analysis.coverage.formatPercentage()}% (${analysis.matchedCount}/${analysis.totalDeclarations})")
+
+        if (analysis.unmatchedDeclarations.isEmpty()) {
+            appendLine("- Lost declarations: none")
+        } else {
+            appendLine("- Lost declarations:")
+            analysis.unmatchedDeclarations.forEach { declaration ->
+                appendLine("  - ${declaration.label}")
+            }
+        }
+
+        appendLine()
     }
 }
 

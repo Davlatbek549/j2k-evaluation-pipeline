@@ -11,6 +11,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.github.javaparser:javaparser-core:3.25.8")
     testImplementation(kotlin("test"))
 }
 application {

@@ -29,7 +29,8 @@ j2k-evaluation-pipeline/
 ├── reports/
 │   └── summary.md              # Generated evaluation report
 ├── src/main/kotlin/
-│   └── Evaluator.kt            # Kotlin evaluator implementation
+│   ├── AstAnalyzer.kt          # JavaParser-based declaration coverage analysis
+│   └── Evaluator.kt            # Kotlin evaluator implementation and report generation
 ├── HYPOTHESES.md               # Hypotheses for each edge-case input
 ├── SUMMARY.md                  # Final project summary and findings
 ├── build.gradle.kts            # Gradle build configuration
@@ -43,7 +44,7 @@ j2k-evaluation-pipeline/
 - Gradle, or the included Gradle wrapper
 - `j2k` when running the full conversion flow outside GitHub Actions
 
-The local evaluator itself uses only the Kotlin standard library and can be run through Gradle.
+The local evaluator runs through Gradle and uses JavaParser for Java AST declaration analysis.
 
 ## Run Locally
 
