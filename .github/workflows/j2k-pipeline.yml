@@ -71,6 +71,9 @@ jobs:
       - name: Run Kotlin evaluator
         run: ./gradlew run
 
+      - name: Show evaluation report
+        run: cat reports/summary.md
+
       - name: Upload conversion results
         uses: actions/upload-artifact@v4
         with:
