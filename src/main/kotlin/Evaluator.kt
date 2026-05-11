@@ -2,6 +2,7 @@ import java.io.File
 import java.util.Locale
 
 private const val CONVERTED_DIR = "kotlin-converted"
+private const val EDGE_CASE_CONVERTED_DIR = "kotlin-converted/edge-cases"
 private const val REPORT_PATH = "reports/summary.md"
 
 private data class QualityIssue(
@@ -12,6 +13,7 @@ private data class QualityIssue(
 
 private data class FileEvaluation(
     val file: File,
+    val relativePath: String,
     val issues: List<QualityIssue>
 ) {
     val issueCount: Int = issues.sumOf { it.count }
@@ -24,7 +26,7 @@ fun main() {
 
     val evaluations = convertedDirectory
         .walkKtFiles()
-        .map(::evaluateFile)
+        .map { evaluateFile(it, convertedDirectory) }
         .toList()
 
     val report = buildReport(evaluations)
@@ -44,7 +46,7 @@ private fun File.walkKtFiles(): Sequence<File> {
         .sortedBy { it.relativeTo(this).path }
 }
 
-private fun evaluateFile(file: File): FileEvaluation {
+private fun evaluateFile(file: File, baseDirectory: File): FileEvaluation {
     val text = file.readText()
     val lines = file.readLines()
 
@@ -56,7 +58,11 @@ private fun evaluateFile(file: File): FileEvaluation {
         countNewKeywords(text)
     )
 
-    return FileEvaluation(file, issues)
+    return FileEvaluation(
+        file = file,
+        relativePath = file.relativeTo(baseDirectory).path,
+        issues = issues
+    )
 }
 
 private fun countSystemOutPrintln(text: String): QualityIssue? {
@@ -138,6 +144,8 @@ private fun buildReport(evaluations: List<FileEvaluation>): String {
     val totalFiles = evaluations.size
     val totalIssues = evaluations.sumOf { it.issueCount }
     val cleanFiles = evaluations.count { it.isClean }
+    val edgeCaseEvaluations = evaluations.filter { it.isEdgeCase }
+    val standardEvaluations = evaluations.filterNot { it.isEdgeCase }
     val qualityScore = if (totalFiles == 0) {
         100.0
     } else {
@@ -157,32 +165,61 @@ private fun buildReport(evaluations: List<FileEvaluation>): String {
         appendLine("## Per-file Breakdown")
         appendLine()
 
-        if (evaluations.isEmpty()) {
-            appendLine("No Kotlin files were found in `$CONVERTED_DIR/`.")
+        if (standardEvaluations.isEmpty()) {
+            appendLine("No non-edge-case Kotlin files were found in `$CONVERTED_DIR/`.")
             appendLine()
         } else {
-            evaluations.forEach { evaluation ->
-                appendLine("### ${evaluation.file.relativeTo(File(CONVERTED_DIR)).path}")
-                appendLine()
-                appendLine("- Issues found: ${evaluation.issueCount}")
+            appendEvaluations(standardEvaluations)
+        }
 
-                if (evaluation.issues.isEmpty()) {
-                    appendLine("- Status: Clean conversion")
-                } else {
-                    evaluation.issues.forEach { issue ->
-                        appendLine("- ${issue.title}: ${issue.count}")
-                        appendLine("  - ${issue.detail}")
-                    }
-                }
+        appendLine("## Edge Case Analysis")
+        appendLine()
+        appendLine("- Edge case files analyzed: ${edgeCaseEvaluations.size}")
+        appendLine("- Edge case issues found: ${edgeCaseEvaluations.sumOf { it.issueCount }}")
+        appendLine("- Edge case quality score: ${edgeCaseEvaluations.qualityScore().formatPercentage()}%")
+        appendLine()
 
-                appendLine()
-            }
+        if (edgeCaseEvaluations.isEmpty()) {
+            appendLine("No converted edge-case Kotlin files were found in `$EDGE_CASE_CONVERTED_DIR/`.")
+            appendLine()
+        } else {
+            appendEvaluations(edgeCaseEvaluations)
         }
 
         appendLine("## Conclusion")
         appendLine()
         appendLine(buildConclusion(totalFiles, totalIssues, qualityScore))
     }
+}
+
+private val FileEvaluation.isEdgeCase: Boolean
+    get() = relativePath == "edge-cases" || relativePath.startsWith("edge-cases/")
+
+private fun StringBuilder.appendEvaluations(evaluations: List<FileEvaluation>) {
+    evaluations.forEach { evaluation ->
+        appendLine("### ${evaluation.relativePath}")
+        appendLine()
+        appendLine("- Issues found: ${evaluation.issueCount}")
+
+        if (evaluation.issues.isEmpty()) {
+            appendLine("- Status: Clean conversion")
+        } else {
+            evaluation.issues.forEach { issue ->
+                appendLine("- ${issue.title}: ${issue.count}")
+                appendLine("  - ${issue.detail}")
+            }
+        }
+
+        appendLine()
+    }
+}
+
+private fun List<FileEvaluation>.qualityScore(): Double {
+    if (isEmpty()) {
+        return 100.0
+    }
+
+    return count { it.isClean }.toDouble() / size.toDouble() * 100.0
 }
 
 private fun buildConclusion(totalFiles: Int, totalIssues: Int, qualityScore: Double): String {

@@ -65,6 +65,24 @@ jobs:
           done
           echo "CONVERSION SUMMARY: $SUCCESS succeeded, $FAILED failed"
 
+      - name: Run j2k converter on edge cases
+        run: |
+          mkdir -p kotlin-converted/edge-cases
+          SUCCESS=0
+          FAILED=0
+          for f in edge-cases/*.java; do
+            filename=$(basename "$f" .java)
+            echo "Converting edge case: $f"
+            if j2k "$f" > "kotlin-converted/edge-cases/${filename}.kt" 2>&1; then
+              echo "✅ Converted edge case: $filename"
+              SUCCESS=$((SUCCESS + 1))
+            else
+              echo "❌ Failed edge case: $filename"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+          echo "EDGE CASE CONVERSION SUMMARY: $SUCCESS succeeded, $FAILED failed"
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
